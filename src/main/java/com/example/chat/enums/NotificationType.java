@@ -1,0 +1,11 @@
+package com.example.chat.enums;
+
+public enum NotificationType {
+    APPOINTMENT_PENDING,
+    APPOINTMENT_CONFIRMED,
+    APPOINTMENT_CANCELLED,
+    APPOINTMENT_RESCHEDULED,
+    APPOINTMENT_REVIEW_REQUEST,
+    REMINDER
+}
+

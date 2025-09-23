@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-tables
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0001.sql
+  - changeSet:
+      id: create-tables-2
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0002.sql
+  - changeSet:
+      id: create-tables-3
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0003.sql
+  - changeSet:
+      id: create-tables-4
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0004.sql
+  - changeSet:
+      id: create-tables-5
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0005.sql
+  - changeSet:
+      id: create-tables-6
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0006.sql
+  - changeSet:
+      id: create-tables-7
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0007.sql
+  - changeSet:
+      id: create-tables-8
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0008.sql
+  - changeSet:
+      id: create-tables-9
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0009.sql
+  - changeSet:
+      id: create-tables-10
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0010.sql
+  - changeSet:
+      id: create-tables-11
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0011.sql
+  - changeSet:
+      id: create-tables-12
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0012.sql
+  - changeSet:
+      id: create-tables-13
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0013.sql
+  - changeSet:
+      id: create-tables-14
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0014.sql
