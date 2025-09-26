@@ -8,6 +8,7 @@ import com.example.chat.dto.res.AppointmentResponse;
 import com.example.chat.entity.Appointment;
 import com.example.chat.enums.AppointmentStatus;
 import com.example.chat.service.AppointmentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -26,23 +28,26 @@ public class AppointmentController {
 
     @PostMapping("/book")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<Appointment>> bookAppointment(
-            @RequestBody BookAppointmentRequest request
+    public ResponseEntity<ApiResponse<Map<String, Object>>> bookAppointment(
+            @RequestBody @Valid BookAppointmentRequest request
     ) {
-        Appointment appointment = appointmentService.bookAppointment(
+        Map<String, Object> response = appointmentService.bookAppointment(
                 request.getDoctorId(),
                 request.getDate(),
-                request.getTime()
+                request.getTime(),
+                request.getPaymentMethod(),
+                request.getFee()
         );
 
         return ResponseEntity.status(201).body(
-                ApiResponse.<Appointment>builder()
+                ApiResponse.<Map<String, Object>>builder()
                         .code(201)
                         .message("Đặt lịch thành công")
-                        .data(appointment)
+                        .data(response)
                         .build()
         );
     }
+
 
     @GetMapping("/available-slots")
     public ResponseEntity<ApiResponse<List<LocalTime>>> getAvailableSlots(

@@ -43,4 +43,8 @@ public class CreateDoctorRequest {
 
     @NotBlank(message = "Mô tả không được để trống")
     private String bio;
+
+    @NotNull(message = "Giá khám không được để trống")
+    @Min(value = 0, message = "Giá khám phải >= 0")
+    private Long fee;
 }

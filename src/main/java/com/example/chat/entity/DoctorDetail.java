@@ -44,6 +44,10 @@ public class DoctorDetail {
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
 
+    @Column(name = "fee", nullable = false)
+    @Builder.Default
+    private Long fee = 0L;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true)

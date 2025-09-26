@@ -1,6 +1,7 @@
 package com.example.chat.entity;
 
 import com.example.chat.enums.AppointmentStatus;
+import com.example.chat.enums.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -52,6 +53,14 @@ public class Appointment {
     @Enumerated(EnumType.STRING)
     @Column(name= "status", nullable = false)
     private AppointmentStatus status = AppointmentStatus.PENDING;
+
+    @Column(name = "fee", nullable = false)
+    @Builder.Default
+    private Long fee = 0L;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod = PaymentMethod.CASH;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

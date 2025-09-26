@@ -13,6 +13,7 @@ public class DoctorDetailResponse {
     private String bio;
     private Long totalReviews;
     private Double avgRating;
+    private Long fee;
 
     private List<DoctorReviewResponse> reviews;
 }

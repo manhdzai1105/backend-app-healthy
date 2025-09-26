@@ -28,10 +28,12 @@ public interface AccountMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "role", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateDoctorFromDTO(UpdateDoctorRequest accountDTO, @MappingTarget Account account);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "account", ignore = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateDoctorDetailFromDTO(UpdateDoctorRequest doctorDetailDto, @MappingTarget DoctorDetail doctorDetail);
 
     @Mapping(source = "doctorDetail.phone", target = "phone_number")
@@ -41,6 +43,7 @@ public interface AccountMapper {
     @Mapping(source = "doctorDetail.specialization", target = "specialization")
     @Mapping(source = "doctorDetail.experienceYears", target = "experience_years")
     @Mapping(source = "doctorDetail.bio", target = "bio")
+    @Mapping(source = "doctorDetail.fee", target = "fee")
     DoctorResponse toDoctorDto(Account account);
 
 }

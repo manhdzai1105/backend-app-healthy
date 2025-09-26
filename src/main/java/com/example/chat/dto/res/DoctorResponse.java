@@ -18,5 +18,6 @@ public class DoctorResponse {
     private String specialization;
     private Integer experience_years;
     private String bio;
+    private Long fee;
     private LocalDateTime createdAt;
 }

@@ -37,4 +37,9 @@ public class UpdateDoctorRequest {
 
     @NotBlank(message = "Mô tả không được để trống")
     private String bio;
+
+    @NotNull(message = "Phí khám không được để trống")
+    @Min(value = 0, message = "Phí khám phải >= 0")
+    private Long fee;
+
 }

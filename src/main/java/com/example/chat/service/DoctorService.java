@@ -41,10 +41,6 @@ public class DoctorService {
 
     @Transactional(rollbackFor = Exception.class)
     public DoctorResponse createDoctor(CreateDoctorRequest request) {
-        if (accountRepository.existsByEmail(request.getEmail())) {
-            throw new ConflictException("Email đã được sử dụng");
-        }
-
         Account account = Account.builder()
                 .email(request.getEmail())
                 .username(request.getUsername())
@@ -59,6 +55,7 @@ public class DoctorService {
                 .specialization(request.getSpecialization())
                 .experienceYears(request.getExperience_years())
                 .bio(request.getBio())
+                .fee(request.getFee())
                 .account(account)
                 .build();
 
@@ -194,6 +191,7 @@ public class DoctorService {
         dto.setSpecialization(detail != null ? detail.getSpecialization() : null);
         dto.setExperienceYears(detail != null ? detail.getExperienceYears() : 0);
         dto.setBio(detail != null ? detail.getBio() : null);
+        dto.setFee(detail != null ? detail.getFee() : 0);
         dto.setTotalReviews(totalReviews);
         dto.setAvgRating(avgRating);
         dto.setReviews(reviewDtos);

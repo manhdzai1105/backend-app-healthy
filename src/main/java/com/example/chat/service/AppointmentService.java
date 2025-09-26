@@ -7,7 +7,9 @@ import com.example.chat.entity.DeviceToken;
 import com.example.chat.entity.Notification;
 import com.example.chat.enums.AppointmentStatus;
 import com.example.chat.enums.NotificationType;
+import com.example.chat.enums.PaymentMethod;
 import com.example.chat.firebase.FcmService;
+import com.example.chat.integration.zalopay.PaymentService;
 import com.example.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,10 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +33,7 @@ public class AppointmentService {
     private final NotificationRepository notificationRepository;
     private final DeviceTokenRepository deviceTokenRepository;
     private final FcmService fcmService;
+    private final PaymentService  paymentService;
 
     // Danh sách slot cố định trong ngày
     private static final List<LocalTime> FIXED_SLOTS = Arrays.asList(
@@ -67,11 +67,19 @@ public class AppointmentService {
     }
 
     @Transactional
-    public Appointment bookAppointment(Long doctorId, LocalDate date, LocalTime time){
+    public Map<String, Object> bookAppointment(
+            Long doctorId,
+            LocalDate date,
+            LocalTime time,
+            PaymentMethod paymentMethod,
+            Long fee
+    ) {
+        // ❌ Không cho phép cuối tuần
         switch (date.getDayOfWeek()) {
             case SATURDAY, SUNDAY -> throw new IllegalArgumentException("Không cho phép đặt lịch cuối tuần");
         }
 
+        // ❌ Slot không hợp lệ
         if (!FIXED_SLOTS.contains(time)) {
             throw new IllegalArgumentException("Khung giờ không hợp lệ: " + time);
         }
@@ -80,14 +88,18 @@ public class AppointmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ"));
         Account user = getCurrentUser();
 
+        // ❌ Slot đã có người đặt
         appointmentRepository.findByDoctorAndAppointmentDateAndAppointmentTime(doctor, date, time)
                 .ifPresent(a -> { throw new IllegalStateException("Slot đã được đặt!"); });
 
+        // ✅ Tạo appointment
         Appointment appointment = Appointment.builder()
                 .doctor(doctor)
                 .user(user)
                 .appointmentDate(date)
                 .appointmentTime(time)
+                .paymentMethod(paymentMethod)
+                .fee(fee)
                 .status(AppointmentStatus.PENDING)
                 .build();
 
@@ -101,8 +113,30 @@ public class AppointmentService {
                 NotificationType.APPOINTMENT_PENDING
         );
 
-        return saved;
+        // ✅ Nếu thanh toán qua ZaloPay
+        if (saved.getPaymentMethod() == PaymentMethod.ZALOPAY) {
+            saveAndPushNotification(
+                    user.getId(),
+                    "⚠️ Thanh toán lịch khám",
+                    "Bạn có lịch hẹn với bác sĩ " + doctor.getUsername() +
+                            " cần thanh toán qua ZaloPay. Vui lòng thanh toán sớm để tránh bị hủy.",
+                    NotificationType.NOTIFICATION_PAYMENT
+            );
+
+            try {
+                Map<String, Object> zaloPayOrder = paymentService.createZaloPayOrder(saved);
+                String orderUrl = (String) zaloPayOrder.get("order_url");
+
+                return Map.of("orderUrl", orderUrl);
+            } catch (Exception e) {
+                throw new RuntimeException("Tạo đơn ZaloPay thất bại: " + e.getMessage(), e);
+            }
+        }
+
+        // Nếu CASH thì không có orderUrl
+        return null;
     }
+
 
     /**
      * Cập nhật trạng thái
