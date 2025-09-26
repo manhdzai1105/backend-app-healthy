@@ -101,3 +101,9 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: changelog/ddl/changelog-0017.sql
+  - changeSet:
+      id: create-tables-18
+      author: vanmanh
+      changes:
+        - sqlFile:
+            path: changelog/ddl/changelog-0018.sql
