@@ -32,4 +32,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByUserAndStatus(Account user, AppointmentStatus status);
 
+    List<Appointment> findByStatusAndAppointmentDateAndAppointmentTime(
+            AppointmentStatus status,
+            LocalDate appointmentDate,
+            LocalTime appointmentTime
+    );
+
 }
