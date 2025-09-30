@@ -1,10 +1,8 @@
 package com.example.chat.service;
 
 import com.example.chat.dto.res.AppointmentResponse;
-import com.example.chat.entity.Account;
-import com.example.chat.entity.Appointment;
-import com.example.chat.entity.DeviceToken;
-import com.example.chat.entity.Notification;
+import com.example.chat.dto.res.PaymentInfoDto;
+import com.example.chat.entity.*;
 import com.example.chat.enums.AppointmentStatus;
 import com.example.chat.enums.NotificationType;
 import com.example.chat.enums.PaymentMethod;
@@ -25,6 +23,7 @@ import java.util.*;
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
 
     private final DoctorDetailRepository doctorDetailRepository;
     private final DoctorReviewRepository doctorReviewRepository;
@@ -90,7 +89,7 @@ public class AppointmentService {
 
         // ❌ Slot đã có người đặt
         appointmentRepository.findByDoctorAndAppointmentDateAndAppointmentTime(doctor, date, time)
-                .ifPresent(a -> { throw new IllegalStateException("Slot đã được đặt!"); });
+                .ifPresent(a -> { throw new IllegalArgumentException("Slot đã được đặt!"); });
 
         // ✅ Tạo appointment
         Appointment appointment = Appointment.builder()
@@ -150,25 +149,34 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn"));
 
+
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Cuộc hẹn đã hoàn tất, không thể thay đổi trạng thái nữa");
+        }
+
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cuộc hẹn đã bị huỷ, không thể thay đổi trạng thái nữa. Vui lòng đặt lịch mới!");
+        }
+
         // ✅ Kiểm tra quyền
         switch (role) {
             case "USER" -> {
                 if (!appointment.getUser().getId().equals(actorId)) {
-                    throw new IllegalStateException("Bạn không có quyền cập nhật lịch này");
+                    throw new IllegalArgumentException("Bạn không có quyền cập nhật lịch này");
                 }
                 if (newStatus != AppointmentStatus.CANCELLED) {
-                    throw new IllegalStateException("Người dùng chỉ có thể huỷ lịch");
+                    throw new IllegalArgumentException("Người dùng chỉ có thể huỷ lịch");
                 }
             }
             case "DOCTOR" -> {
                 if (!appointment.getDoctor().getId().equals(actorId)) {
-                    throw new IllegalStateException("Bạn không có quyền cập nhật lịch này");
+                    throw new IllegalArgumentException("Bạn không có quyền cập nhật lịch này");
                 }
             }
             case "ADMIN" -> {
                 // admin có toàn quyền
             }
-            default -> throw new IllegalStateException("Vai trò không hợp lệ");
+            default -> throw new IllegalArgumentException("Vai trò không hợp lệ");
         }
 
         appointment.setStatus(newStatus);
@@ -254,11 +262,11 @@ public class AppointmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn"));
 
         if (!appointment.getUser().getId().equals(actorId)) {
-            throw new IllegalStateException("Bạn không có quyền đổi lịch hẹn này");
+            throw new IllegalArgumentException("Bạn không có quyền đổi lịch hẹn này");
         }
 
         if (appointment.getStatus() != AppointmentStatus.PENDING) {
-            throw new IllegalStateException("Không thể đổi lịch ở trạng thái hiện tại");
+            throw new IllegalArgumentException("Không thể đổi lịch ở trạng thái hiện tại");
         }
 
         // ❌ Không cho reschedule cuối tuần
@@ -309,6 +317,21 @@ public class AppointmentService {
             );
         }
 
+        Transaction tx = transactionRepository.findByAppointmentId(a.getId()).orElse(null);
+
+        PaymentInfoDto paymentInfo = null;
+
+        if (tx != null) {
+            paymentInfo = PaymentInfoDto.builder()
+                    .paymentStatus(tx.getPaymentStatus())
+                    .appTransId(tx.getAppTransId())
+                    .zpTransId(tx.getZpTransId())
+                    .refundId(tx.getRefundId())
+                    .zpRefundId(tx.getZpRefundId())
+                    .paymentDate(tx.getPaymentDate())
+                    .build();
+        }
+
         return AppointmentResponse.builder()
                 .id(a.getId())
                 .date(a.getAppointmentDate())
@@ -324,6 +347,9 @@ public class AppointmentService {
                 .username(a.getUser().getUsername())
                 .userAvatarUrl(userDetail != null ? userDetail.getAvatar_url() : null)
                 .reviewed(reviewed)
+                .paymentMethod(a.getPaymentMethod())
+                .amount(a.getFee())
+                .paymentInfo(paymentInfo)
                 .build();
     }
 

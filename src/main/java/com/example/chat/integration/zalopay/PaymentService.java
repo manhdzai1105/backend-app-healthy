@@ -3,9 +3,11 @@ package com.example.chat.integration.zalopay;
 import com.example.chat.entity.Appointment;
 import com.example.chat.entity.Transaction;
 import com.example.chat.enums.PaymentStatus;
+import com.example.chat.enums.RefundStatus;
 import com.example.chat.repository.TransactionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -16,9 +18,12 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -82,6 +87,7 @@ public class PaymentService {
                 .amount(appointment.getFee())
                 .appTransId(appTransId)
                 .paymentStatus(PaymentStatus.PENDING)
+                .refundStatus(RefundStatus.NONE)
                 .build();
         transactionRepository.save(tx);
 
@@ -105,19 +111,11 @@ public class PaymentService {
         System.out.println("ZaloPay response callback: " + dataMap);
 
         String appTransId = (String) dataMap.get("app_trans_id");
-        String zpTransId = String.valueOf(dataMap.get("zp_trans_id"));
+        Map<String, Object> queryResult = queryZaloPayOrder(appTransId);
 
-        // ✅ Update DB
-        transactionRepository.findByAppTransId(appTransId).ifPresent(tx -> {
-
-            tx.setPaymentStatus(PaymentStatus.SUCCESS);
-            tx.setZpTransId(zpTransId);
-            tx.setPaymentDate(LocalDateTime.now());
-            transactionRepository.save(tx);
-        });
-
-        return Map.of("return_code", 1, "return_message", "success");
+        return Map.of("return_code", 1, "return_message", "success", "zalopay_result", queryResult);
     }
+
 
     // ==========  Kiểm tra trạng thái giao dịch ==========
     public Map<String, Object> queryZaloPayOrder(String appTransId) throws Exception {
@@ -147,19 +145,29 @@ public class PaymentService {
 
         Map<String, Object> result = response.getBody();
         System.out.println("Query result: " + result);
+        String zpTransId = String.valueOf(result.get("zp_trans_id"));
+        System.out.println("Zp " + zpTransId);
 
-        // update nếu DB vẫn đang PENDING
         transactionRepository.findByAppTransId(appTransId).ifPresent(tx -> {
             int returnCode = (int) result.get("return_code");
-            if (tx.getPaymentStatus() == PaymentStatus.PENDING) {
-                if (returnCode == 1) {
-                    tx.setPaymentStatus(PaymentStatus.SUCCESS);
-                } else if (returnCode == 2) {
-                    tx.setPaymentStatus(PaymentStatus.FAILED);
+
+            if (returnCode == 1) {
+                tx.setZpTransId(zpTransId);
+                tx.setPaymentStatus(PaymentStatus.SUCCESS);
+
+                Object serverTimeObj = result.get("server_time");
+                if (serverTimeObj != null) {
+                    long serverTimeMillis = Long.parseLong(serverTimeObj.toString());
+                    ZoneId vietnamZone = ZoneId.of("Asia/Ho_Chi_Minh");
+                    LocalDateTime paymentDateVN = Instant.ofEpochMilli(serverTimeMillis)
+                            .atZone(vietnamZone)
+                            .toLocalDateTime();
+                    tx.setPaymentDate(paymentDateVN);
                 }
-                tx.setPaymentDate(LocalDateTime.now());
-                transactionRepository.save(tx);
+            } else if (returnCode == 2) {
+                tx.setPaymentStatus(PaymentStatus.FAILED);
             }
+            transactionRepository.save(tx);
         });
 
         return result;
@@ -167,31 +175,38 @@ public class PaymentService {
 
     // ========== Hoàn tiền ==========
     public Map<String, Object> refundOrder(String appTransId) throws Exception {
-        // 1. Truy vấn trạng thái giao dịch trước khi refund
-        Map<String, Object> queryResult = queryZaloPayOrder(appTransId);
-        int returnCode = ((Number) queryResult.get("return_code")).intValue();
+        // 1. Lấy transaction từ DB
+        Transaction tx = transactionRepository.findByAppTransId(appTransId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giao dịch trong DB"));
 
-        if (returnCode != 1) {
+        // 2. Kiểm tra trạng thái thanh toán trong DB
+        if (tx.getPaymentStatus() != PaymentStatus.SUCCESS) {
             throw new IllegalStateException("Không thể hoàn tiền vì giao dịch chưa thành công");
         }
 
-        // 2. Lấy amount và zp_trans_id từ query
-        long amount = ((Number) queryResult.get("amount")).longValue();
-        String zpTransId = String.valueOf(queryResult.get("zp_trans_id"));
+        // 3. Kiểm tra trạng thái refund hiện tại
+        switch (tx.getRefundStatus()) {
+            case NONE, FAILED -> {
+                // cho phép tạo refund mới
+            }
+            case PROCESSING -> throw new IllegalStateException("Refund của bạn đang được xử lý");
+            case COMPLETED -> throw new IllegalStateException("Refund của bạn đã được xử lý thành công");
+        }
 
-        // 3. Sinh m_refund_id theo format yyMMdd_appid_uid
+        // 4. Lấy dữ liệu cần thiết từ DB
+        long amount = tx.getAmount();
+        String zpTransId = tx.getZpTransId();
+
+        // 5. Sinh m_refund_id theo format yyMMdd_appid_uid
         long timestamp = System.currentTimeMillis();
         String uid = timestamp + "" + (111 + new Random().nextInt(888)); // unique id
         String refundId = new SimpleDateFormat("yyMMdd").format(new Date())
                 + "_" + zaloPayConfig.getAppId()
                 + "_" + uid;
 
-        System.out.println("RefundId: " + refundId);
-
-        // 4. Description mặc định
         String refundDescription = "Hoan tien giao dich";
 
-        // 5. Tạo MAC = appid|zptransid|amount|description|timestamp
+        // 6. Tạo MAC = appid|zptransid|amount|description|timestamp
         String data = zaloPayConfig.getAppId() + "|"
                 + zpTransId + "|"
                 + amount + "|"
@@ -199,9 +214,8 @@ public class PaymentService {
                 + timestamp;
 
         String mac = hmacSHA256(zaloPayConfig.getKey1(), data);
-        System.out.println("Refund data for MAC: " + data);
 
-        // 6. Build request
+        // 7. Build request
         Map<String, String> params = new LinkedHashMap<>();
         params.put("app_id", zaloPayConfig.getAppId());
         params.put("zp_trans_id", zpTransId);
@@ -227,15 +241,31 @@ public class PaymentService {
         Map<String, Object> result = response.getBody();
         System.out.println("Refund result: " + result);
 
+        int refundCode = ((Number) result.get("return_code")).intValue();
+        String zpRefundId = String.valueOf(result.get("refund_id"));
 
-        transactionRepository.findByAppTransId(appTransId).ifPresent(tx -> {
-            tx.setRefundId(refundId);
-            tx.setPaymentStatus(PaymentStatus.REFUND_PROCESSING);
-            transactionRepository.save(tx);
-        });
+        // 8. Cập nhật DB dựa trên kết quả refund
+        switch (refundCode) {
+            case 1 -> { // Thành công
+                tx.setRefundStatus(RefundStatus.COMPLETED);
+                tx.setRefundId(refundId);
+                tx.setZpRefundId(zpRefundId);
+            }
+            case 2 -> { // Thất bại
+                tx.setRefundStatus(RefundStatus.FAILED);
+            }
+            case 3 -> { // Đang xử lý
+                tx.setRefundStatus(RefundStatus.PROCESSING);
+                tx.setRefundId(refundId);
+                tx.setZpRefundId(zpRefundId);
+            }
+        }
+
+        transactionRepository.save(tx);
 
         return result;
     }
+
 
     // ========== Kiểm tra trạng thái hoàn tiền ==========
     public Map<String, Object> queryRefundOrder(String refundId) throws Exception {
@@ -273,11 +303,18 @@ public class PaymentService {
             int returnCode = ((Number) result.get("return_code")).intValue();
 
             transactionRepository.findByRefundId(refundId).ifPresent(tx -> {
-                if (returnCode == 1) {
-                    // Refund thành công
-                    tx.setPaymentStatus(PaymentStatus.REFUNDED);
-                    transactionRepository.save(tx);
+                switch (returnCode) {
+                    case 1 -> { // Refund thành công
+                        tx.setRefundStatus(RefundStatus.COMPLETED);
+                    }
+                    case 2 -> { // Refund thất bại
+                        tx.setRefundStatus(RefundStatus.FAILED);
+                    }
+                    case 3 -> { // Refund đang xử lý
+                        tx.setRefundStatus(RefundStatus.PROCESSING);
+                    }
                 }
+                transactionRepository.save(tx);
             });
         }
 

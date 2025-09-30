@@ -1,6 +1,7 @@
 package com.example.chat.entity;
 
 import com.example.chat.enums.PaymentStatus;
+import com.example.chat.enums.RefundStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,6 +42,13 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status", nullable = false, length = 20)
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "refund_status", length = 20, nullable = false)
+    private RefundStatus refundStatus = RefundStatus.NONE;
+
+    @Column(name = "zp_refund_id", length = 100)
+    private String zpRefundId;
 
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;

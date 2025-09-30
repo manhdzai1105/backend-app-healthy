@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     Optional<Transaction> findByAppTransId(String appTransId);
     Optional<Transaction> findByRefundId(String refundId);
+    Optional<Transaction> findByAppointmentId(Long appointmentId);
 }

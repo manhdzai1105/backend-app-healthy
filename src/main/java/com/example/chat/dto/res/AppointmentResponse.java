@@ -1,6 +1,7 @@
 package com.example.chat.dto.res;
 
 import com.example.chat.enums.AppointmentStatus;
+import com.example.chat.enums.PaymentMethod;
 import lombok.Builder;
 import lombok.Data;
 
@@ -25,4 +26,9 @@ public class AppointmentResponse {
     private String username;
     private String userAvatarUrl;
     private Boolean reviewed;
+
+    private PaymentMethod paymentMethod;
+    private Long amount;
+
+    private PaymentInfoDto paymentInfo;
 }
