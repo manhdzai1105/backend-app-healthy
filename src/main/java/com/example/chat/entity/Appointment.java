@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+
 @Entity
 @Table(
         name = "appointments",
@@ -61,6 +62,10 @@ public class Appointment {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod = PaymentMethod.CASH;
+
+    @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Transaction transaction;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

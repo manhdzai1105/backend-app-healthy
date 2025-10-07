@@ -24,6 +24,7 @@ public interface AccountMapper {
     @Mapping(source = "userDetail.gender", target = "gender")
     @Mapping(source = "userDetail.date_of_birth", target = "date_of_birth")
     @Mapping(source = "userDetail.avatar_url", target = "avatar_url")
+    @Mapping(source = "userDetail.address", target = "address")
     AccountResponse toDto(Account account);
 
     @Mapping(target = "id", ignore = true)

@@ -3,10 +3,12 @@ package com.example.chat.service;
 import com.example.chat.dto.PagingResponse;
 import com.example.chat.dto.req.UpdateAccountRequest;
 import com.example.chat.dto.res.AccountResponse;
+import com.example.chat.dto.res.DoctorResponse;
 import com.example.chat.dto.res.ProfileUserResponse;
 import com.example.chat.dto.res.UploadImageResponse;
 import com.example.chat.entity.Account;
 import com.example.chat.entity.UserDetail;
+import com.example.chat.enums.Role;
 import com.example.chat.mapper.AccountMapper;
 import com.example.chat.repository.AccountRepository;
 import com.example.chat.repository.UserDetailRepository;
@@ -88,6 +90,33 @@ public class AccountService {
                 .data(data)
                 .build();
     }
+
+    public PagingResponse<DoctorResponse> getPagedDoctors(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // 🔹 Giả sử Account có field role (Enum Role.DOCTOR)
+        Page<Account> doctorPage = accountRepository.findAllByRole(Role.DOCTOR, pageable);
+
+        List<DoctorResponse> data = doctorPage
+                .stream()
+                .map(accountMapper::toDoctorDto)
+                .toList();
+
+        return PagingResponse.<DoctorResponse>builder()
+                .code(200)
+                .message("Lấy danh sách bác sĩ thành công")
+                .page(doctorPage.getNumber())
+                .size(doctorPage.getSize())
+                .totalElements(doctorPage.getTotalElements())
+                .totalPages(doctorPage.getTotalPages())
+                .data(data)
+                .build();
+    }
+
 
     @Transactional(readOnly = true)
     public ProfileUserResponse getProfile() {

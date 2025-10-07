@@ -27,4 +27,6 @@ public class UpdateAccountRequest {
 
     @Past(message = "Ngày sinh phải trước ngày hiện tại")
     private LocalDate date_of_birth;
+
+    private String address;
 }

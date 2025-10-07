@@ -15,4 +15,5 @@ public class AccountResponse {
     private String gender;
     private String avatar_url;
     private LocalDate date_of_birth;
+    private String address;
 }

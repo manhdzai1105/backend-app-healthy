@@ -143,4 +143,17 @@ public class DoctorController {
         );
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<DoctorResponse>> getDoctorProfile() {
+        DoctorResponse response = doctorService.getProfileDoctor();
+
+        ApiResponse<DoctorResponse> apiResponse = ApiResponse.<DoctorResponse>builder()
+                .code(200)
+                .message("Lấy thông tin bác sĩ thành công")
+                .data(response)
+                .build();
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 }

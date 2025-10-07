@@ -1,6 +1,7 @@
 package com.example.chat.dto.res;
 
 import com.example.chat.enums.PaymentStatus;
+import com.example.chat.enums.RefundStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,4 +17,5 @@ public class PaymentInfoDto {
     private String zpRefundId;
     private String refundId;
     private LocalDateTime paymentDate;
+    private RefundStatus refundStatus;
 }

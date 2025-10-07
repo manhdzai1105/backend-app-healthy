@@ -108,28 +108,15 @@ public class AppointmentService {
         saveAndPushNotification(
                 doctor.getId(),
                 "Lịch khám mới",
-                "Bạn có lịch khám mới từ bệnh nhân " + user.getUsername(),
+                "Bệnh nhân " + user.getUsername()
+                        + " vừa đặt lịch hẹn khám: " + time + " ngày " + date,
                 NotificationType.APPOINTMENT_PENDING
         );
 
         // ✅ Nếu thanh toán qua ZaloPay
         if (saved.getPaymentMethod() == PaymentMethod.ZALOPAY) {
-            saveAndPushNotification(
-                    user.getId(),
-                    "⚠️ Thanh toán lịch khám",
-                    "Bạn có lịch hẹn với bác sĩ " + doctor.getUsername() +
-                            " cần thanh toán qua ZaloPay. Vui lòng thanh toán sớm để tránh bị hủy.",
-                    NotificationType.NOTIFICATION_PAYMENT
-            );
-
-            try {
-                Map<String, Object> zaloPayOrder = paymentService.createZaloPayOrder(saved);
-                String orderUrl = (String) zaloPayOrder.get("order_url");
-
-                return Map.of("orderUrl", orderUrl);
-            } catch (Exception e) {
-                throw new RuntimeException("Tạo đơn ZaloPay thất bại: " + e.getMessage(), e);
-            }
+                Map<String, Object> result = paymentService.createZaloPayOrder(saved);
+                return Map.of("result", result);
         }
 
         // Nếu CASH thì không có orderUrl
@@ -187,7 +174,9 @@ public class AppointmentService {
             case CONFIRMED -> saveAndPushNotification(
                     saved.getUser().getId(),
                     "Lịch hẹn đã được xác nhận",
-                    "Bác sĩ " + saved.getDoctor().getUsername() + " đã xác nhận lịch hẹn",
+                    "Bác sĩ " + saved.getDoctor().getUsername()
+                            + " đã xác nhận lịch hẹn: " + saved.getAppointmentTime()
+                            + " ngày " + saved.getAppointmentDate(),
                     NotificationType.APPOINTMENT_CONFIRMED
             );
             case CANCELLED -> {
@@ -195,13 +184,17 @@ public class AppointmentService {
                     case "USER" -> saveAndPushNotification(
                             saved.getDoctor().getId(),
                             "Lịch hẹn bị huỷ",
-                            "Bệnh nhân " + saved.getUser().getUsername() + " đã huỷ lịch hẹn",
+                            "Bệnh nhân " + saved.getUser().getUsername() + " đã huỷ lịch hẹn: "
+                                    + saved.getAppointmentTime()
+                                    + " ngày " + saved.getAppointmentDate(),
                             NotificationType.APPOINTMENT_CANCELLED
                     );
                     case "DOCTOR" -> saveAndPushNotification(
                             saved.getUser().getId(),
                             "Lịch hẹn bị huỷ",
-                            "Bác sĩ " + saved.getDoctor().getUsername() + " đã huỷ lịch hẹn",
+                            "Bác sĩ " + saved.getDoctor().getUsername() + " đã huỷ lịch hẹn: "
+                                    + saved.getAppointmentTime()
+                                    + " ngày " + saved.getAppointmentDate(),
                             NotificationType.APPOINTMENT_CANCELLED
                     );
                     default -> throw new IllegalStateException("Vai trò không hợp lệ");
@@ -210,7 +203,10 @@ public class AppointmentService {
             case COMPLETED -> saveAndPushNotification(
                     saved.getUser().getId(),
                     "Hãy đánh giá bác sĩ",
-                    "Cuộc hẹn với bác sĩ " + saved.getDoctor().getUsername() + " đã hoàn tất. Vui lòng để lại nhận xét.",
+                    "Cuộc hẹn với bác sĩ " + saved.getDoctor().getUsername()
+                            + " vào lúc " + saved.getAppointmentTime()
+                            + " ngày " + saved.getAppointmentDate()
+                            + " đã hoàn tất. Vui lòng để lại nhận xét.",
                     NotificationType.APPOINTMENT_REVIEW_REQUEST
             );
             default -> {}

@@ -4,6 +4,7 @@ import com.example.chat.dto.ApiResponse;
 import com.example.chat.dto.PagingResponse;
 import com.example.chat.dto.req.UpdateAccountRequest;
 import com.example.chat.dto.res.AccountResponse;
+import com.example.chat.dto.res.DoctorResponse;
 import com.example.chat.dto.res.ProfileUserResponse;
 import com.example.chat.entity.Account;
 import com.example.chat.entity.UserDetail;
@@ -44,7 +45,6 @@ public class AccountController {
         );
     }
 
-    @PreAuthorize("hasRole('USER')")
     @GetMapping("/users")
     public ResponseEntity<PagingResponse<AccountResponse>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -57,6 +57,17 @@ public class AccountController {
 
         return ResponseEntity.ok(pagingResponse);
     }
+
+    @GetMapping("/doctors")
+    public PagingResponse<DoctorResponse> getDoctors(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        return accountService.getPagedDoctors(page, size, sortBy, direction);
+    }
+
 
     @GetMapping("/profile-user")
     public ResponseEntity<ApiResponse<ProfileUserResponse>> getProfile() {

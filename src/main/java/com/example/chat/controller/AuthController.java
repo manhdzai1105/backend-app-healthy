@@ -151,7 +151,7 @@ public class AuthController {
                 "id", account.getId(),
                 "email", email,
                 "name", name,
-                "picture", picture,
+                "picture", userDetail.getAvatar_url(),
                 "role", account.getRole().name()
         ));
     }
@@ -168,7 +168,7 @@ public class AuthController {
         Long accountId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String deviceId = body.get("deviceId");
         authService.logout(accountId, deviceId);
-        return ResponseEntity.ok(Map.of("message", "Logout thành công"));
+        return ResponseEntity.ok(Map.of("message", "Đăng xuất thành công"));
     }
 
 }

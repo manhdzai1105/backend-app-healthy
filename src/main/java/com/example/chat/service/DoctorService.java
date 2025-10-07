@@ -234,6 +234,12 @@ public class DoctorService {
         return accountMapper.toDoctorDto(account);
     }
 
+    public DoctorResponse getProfileDoctor() {
+        Account account = getCurrentUser();
+
+        return accountMapper.toDoctorDto(account);
+    }
+
     private Account getCurrentUser() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return accountRepository.findById(userId)

@@ -37,4 +37,11 @@ public class NotificationService {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return notificationRepository.markAllAsReadByUserAndDate(userId, date);
     }
+
+    public void markAsReadById(Long id) {
+        notificationRepository.findById(id).ifPresent(notification -> {
+            notification.setIsRead(true);
+            notificationRepository.save(notification);
+        });
+    }
 }

@@ -204,6 +204,7 @@ public class AuthService {
         return Map.of("accessToken", newAccessToken);
     }
 
+    @Transactional
     public void logout(Long accountId, String deviceId) {
         // Xoá refresh token của user + device
         keyRepository.deleteByAccount_IdAndDeviceId(accountId, deviceId);

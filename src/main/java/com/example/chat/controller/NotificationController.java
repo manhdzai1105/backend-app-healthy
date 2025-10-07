@@ -48,6 +48,17 @@ public class NotificationController {
                 .build();
     }
 
+    @PutMapping("/mark-read/{id}")
+    public ApiResponse<Void> markAsReadById(@PathVariable Long id) {
+        notificationService.markAsReadById(id);
+
+        return ApiResponse.<Void>builder()
+                .code(HttpServletResponse.SC_OK)
+                .message("Đã đánh dấu thông báo ID " + id + " là đã đọc")
+                .build();
+    }
+
+
     @PostMapping("/register-fcm_token")
     public ResponseEntity<?> registerToken(@RequestBody Map<String, String> body) {
         String fcmToken = body.get("fcmToken");

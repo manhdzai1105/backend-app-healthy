@@ -59,8 +59,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        List<String> excludedPaths = List.of("/api/auth", "/ws", "/payment/callback");
-
+        List<String> excludedPaths = List.of(
+                "/api/auth/register",
+                "/api/auth/login",
+                "/api/auth/google",
+                "/api/auth/forgot-password",
+                "/api/auth/verify-otp",
+                "/api/auth/reset-password",
+                "/api/auth/refresh-accessToken",
+                "/ws",
+                "/payment/callback"
+        );
         return excludedPaths.stream().anyMatch(path::startsWith);
     }
 

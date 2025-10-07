@@ -258,7 +258,7 @@ public class SocketEventController {
 
         for (ConversationMember member : conversationWithMembers.getMembers()) {
             if (!member.getAccount().getId().equals(currentUser.getId())) {
-                conversationUnreadService.incrementUnreadCount(conversation, member.getAccount());
+
                 messagingTemplate.convertAndSendToUser(
                         member.getAccount().getId().toString(),
                         "/queue/call-end",
@@ -275,17 +275,11 @@ public class SocketEventController {
             String messageContent
     ) {
         Message callMessage = new Message();
-        if("CANCELLED".equals(messageContent) || "REJECTED".equals(messageContent) || "MISSED".equals(messageContent)) {
-            callMessage.setConversation(conversation);
-            callMessage.setAccount(currentUser);
-            callMessage.setMessageType(MessageType.CALL);
-            callMessage.setMessageContent(messageContent);
-        }else {
-            callMessage.setConversation(conversation);
-            callMessage.setAccount(callSession.getAccount());
-            callMessage.setMessageType(MessageType.CALL);
-            callMessage.setMessageContent(messageContent);
-        }
+
+        callMessage.setConversation(conversation);
+        callMessage.setAccount(callSession.getAccount());
+        callMessage.setMessageType(MessageType.valueOf(callSession.getCallType().name()));
+        callMessage.setMessageContent(messageContent);
 
         messageRepository.save(callMessage);
 
