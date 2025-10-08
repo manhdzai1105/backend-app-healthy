@@ -1,0 +1,95 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD:}
+
+  liquibase:
+    enabled: true
+    change-log: classpath:changelog/db.changelog-master.yml
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_OAUTH2_CLIENT_ID}
+            client-secret: ${GOOGLE_OAUTH2_CLIENT_SECRET}
+            scope:
+              - openid
+              - profile
+              - email
+            redirect-uri: ${GOOGLE_OAUTH2_REDIRECT_URI}
+        provider:
+          google:
+            issuer-uri: ${GOOGLE_OAUTH2_ISSUER_URI}
+
+jwt:
+  access-secret: ${JWT_ACCESS_SECRET}
+  refresh-secret: ${JWT_REFRESH_SECRET}
+  access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION}
+  refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
+
+google:
+  oauth2:
+    client-id: ${GOOGLE_OAUTH2_CLIENT_ID}
+
+minio:
+  endpoint: ${endpoint}
+  accessKey: ${MINIO_ACCESS_KEY}
+  secretKey: ${MINIO_SECRET_KEY}
+  bucket: ${MINIO_BUCKET}
+  keyPrefix: ${MINIO_KEY_PREFIX}
+  presignExpirySeconds: ${MINIO_PRESIGN_EXPIRY_SECONDS}
+  makeBucketPublic: ${MINIO_MAKE_BUCKET_PUBLIC}
+
+
+cron-jobs:
+  profiles:
+    - name: remindJob
+      cron: "0 15,45 8-16 * * ?"
+
+zalopay:
+  app-id: ${ZALOPAY_APP_ID}
+  key1: ${ZALOPAY_KEY1}
+  key2: ${ZALOPAY_KEY2}
+  endpoint: ${ZALOPAY_ENDPOINT}
+  callback-url: ${ZALOPAY_CALLBACK_URL}
+
+
+firebase:
+  credentials: ${FIREBASE_CREDENTIALS}
+
+
