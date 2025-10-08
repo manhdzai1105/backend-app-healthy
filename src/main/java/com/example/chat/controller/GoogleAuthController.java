@@ -6,7 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/api/auth/google")
-public class GoogleAuthController {
+public class
+GoogleAuthController {
 
     @GetMapping("/login")
     public String login() {

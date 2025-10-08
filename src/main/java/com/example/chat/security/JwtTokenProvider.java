@@ -3,42 +3,41 @@ package com.example.chat.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.*;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 
+@Getter
+@Setter
 @Component
+@ConfigurationProperties(prefix = "jwt")
 public class JwtTokenProvider {
 
-    @Value("${jwt.access-secret}")
-    private String accessSecretRaw;
+    // Các giá trị đọc từ application.yml
+    private String accessSecret;
+    private String refreshSecret;
+    private long accessTokenExpirationMs;
+    private long refreshTokenExpirationMs;
 
-    @Value("${jwt.refresh-secret}")
-    private String refreshSecretRaw;
-
-    @Value("${jwt.access-token-expiration-ms}")
-    private long accessTokenValidity;
-
-    @Value("${jwt.refresh-token-expiration-ms}")
-    private long refreshTokenValidity;
-
+    // Key thực tế được khởi tạo sau khi load cấu hình
     private Key accessSecretKey;
     private Key refreshSecretKey;
 
     @PostConstruct
     public void init() {
-        accessSecretKey = Keys.hmacShaKeyFor(accessSecretRaw.getBytes());
-        refreshSecretKey = Keys.hmacShaKeyFor(refreshSecretRaw.getBytes());
+        accessSecretKey = Keys.hmacShaKeyFor(accessSecret.getBytes());
+        refreshSecretKey = Keys.hmacShaKeyFor(refreshSecret.getBytes());
     }
 
     public String generateAccessToken(Long accountId, String username, String role) {
-        return generateToken(accountId, username, role, accessTokenValidity, accessSecretKey);
+        return generateToken(accountId, username, role, accessTokenExpirationMs, accessSecretKey);
     }
 
     public String generateRefreshToken(Long accountId, String username, String role) {
-        return generateToken(accountId, username, role, refreshTokenValidity, refreshSecretKey);
+        return generateToken(accountId, username, role, refreshTokenExpirationMs, refreshSecretKey);
     }
 
     private String generateToken(Long accountId, String username, String role, long validityInMs, Key key) {

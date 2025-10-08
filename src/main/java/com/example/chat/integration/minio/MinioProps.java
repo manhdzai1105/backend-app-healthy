@@ -1,31 +1,21 @@
 package com.example.chat.integration.minio;
 
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@Data
+@Getter
+@Setter
 @Component
+@ConfigurationProperties(prefix = "minio")
 public class MinioProps {
 
-    @Value("${minio.endpoint}")
     private String endpoint;
-
-    @Value("${minio.accessKey}")
     private String accessKey;
-
-    @Value("${minio.secretKey}")
     private String secretKey;
-
-    @Value("${minio.bucket}")
     private String bucket;
-
-    @Value("${minio.keyPrefix:uploads/}")
-    private String keyPrefix;
-
-    @Value("${minio.presignExpirySeconds:300}")
+    private String keyPrefix ;
     private int presignExpirySeconds;
-
-    @Value("${minio.makeBucketPublic:false}")
     private boolean makeBucketPublic;
 }
