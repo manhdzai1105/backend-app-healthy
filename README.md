@@ -39,6 +39,7 @@ A comprehensive health management platform enabling users to manage appointments
 - **Admin & Monitoring:**  
   Manage users/doctors, posts, etc.
 
+---
 
 ### How to run
 - **Clone the repo:**
