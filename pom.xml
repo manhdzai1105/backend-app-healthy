@@ -181,6 +181,27 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!-- ✅ Spring AI - OpenAI -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-openai</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
+		<!-- ✅ Spring AI - JDBC Chat Memory (lưu hội thoại vào DB) -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-chat-memory-repository-jdbc</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
+		<!-- ✅ Spring Data JDBC (ChatMemoryRepository hoạt động) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jdbc</artifactId>
+		</dependency>
+
+
 
 	</dependencies>
 

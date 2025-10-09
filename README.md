@@ -9,7 +9,7 @@ A comprehensive health management platform enabling users to manage appointments
 
 ### Technologies
 
-- **Backend:** Spring Boot 3, Java 21, JPA/Hibernate, Liquibase, Redis, PostgreSQL, MapStruct, Spring Security, Quartz, Docker
+- **Backend:** Spring Boot 3, Java 21, JPA/Hibernate, Liquibase, Redis, PostgreSQL, MapStruct, Spring Security, Quartz, Docker, WebSocket, Firebase
 
 ---
 
